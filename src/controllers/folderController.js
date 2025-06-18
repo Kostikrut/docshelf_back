@@ -53,10 +53,14 @@ export const getFolder = catchAsync(async (req, res, next) => {
 
   if (!folder) return next(new AppError("Folder not found", 404));
 
+  const files =
+    (await File.find({ _id: req.user._id, parentFolder: folderId })) || [];
+
   res.status(200).json({
     status: "success",
     data: {
       folder,
+      files,
     },
   });
 });
