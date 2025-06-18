@@ -1,0 +1,8 @@
+node_modules/
+/public/product_images
+*.prettierrc
+*.env
+.parcel-cache/
+/dev-data
+/public/product_images/
+/public/
