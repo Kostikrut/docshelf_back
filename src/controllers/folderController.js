@@ -40,3 +40,23 @@ export const createFolder = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+export const getFolder = catchAsync(async (req, res, next) => {
+  const { id: folderId } = req.params;
+
+  if (!folderId) return next(new AppError("Folder Id is required", 400));
+
+  const folder = await Folder.findById(folderId).populate(
+    "permitedUsers",
+    "parentFolder"
+  );
+
+  if (!folder) return next(new AppError("Folder not found", 404));
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      folder,
+    },
+  });
+});
