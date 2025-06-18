@@ -54,13 +54,56 @@ export const getFolder = catchAsync(async (req, res, next) => {
   if (!folder) return next(new AppError("Folder not found", 404));
 
   const files =
-    (await File.find({ _id: req.user._id, parentFolder: folderId })) || [];
+    (await File.find({ user: req.user._id, parentFolder: folderId })) || [];
+
+  const folders =
+    (await File.find({ user: req.user._id, parentFolder: folderId })) || [];
 
   res.status(200).json({
     status: "success",
     data: {
       folder,
-      files,
+      content: {
+        files,
+        folders,
+      },
+    },
+  });
+});
+
+export const getRootFolders = catchAsync(async (req, res, next) => {
+  const folders =
+    (await Folder.find({ user: req.user._id, isRoot: true })) || [];
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      folders,
+    },
+  });
+});
+
+export const updateFolder = catchAsync(async (req, res, next) => {
+  const { id: folderId } = req.params;
+  const { name, permission, permitedUsers, tags } = req.body;
+
+  if (!folderId) return next(new AppError("Folder Id is required", 400));
+
+  const folder = await Folder.findById(folderId);
+
+  if (!folder) return next(new AppError("Folder not found", 404));
+
+  folder.name = name || folder.name;
+  folder.permission = permission || folder.permission;
+  folder.permitedUsers = permitedUsers || folder.permitedUsers;
+  folder.tags = tags || folder.tags;
+
+  await folder.save();
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      folder,
     },
   });
 });
