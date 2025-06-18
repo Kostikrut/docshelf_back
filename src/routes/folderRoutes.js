@@ -5,13 +5,19 @@ import {
   createFolder,
   getFolder,
   getRootFolders,
+  updateFolder,
+  moveFolder,
 } from "../controllers/folderController.js";
 
 const router = express.Router();
 
-router.post("/createfolder", protect, createFolder);
-router.get("/root", protect, getRootFolders);
+router.use(protect);
 
-router.get("/:id", protect, getFolder);
+router.post("/createfolder", createFolder);
+router.get("/root", getRootFolders);
+router.patch("/moveFolder/:id", moveFolder);
+
+router.get("/:id", getFolder);
+router.patch("/:id", updateFolder);
 
 export default router;
