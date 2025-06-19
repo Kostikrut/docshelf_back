@@ -6,6 +6,9 @@ import AppError from "../utils/appError.js";
 export const uploadFiles = catchAsync(async (req, res, next) => {
   const files = req.files;
   const userId = req.user._id;
+  const parentFolder = req.body.parentFolder;
+  const tags = req.body.tags || [];
+  const reminders = req.body.reminders || [];
 
   if (!files || files.length === 0) {
     return next(new AppError("No files provided", 400));
@@ -23,13 +26,14 @@ export const uploadFiles = catchAsync(async (req, res, next) => {
         size: file.size,
         url: res.key,
         user: userId,
+
+        parentFolder: parentFolder || null,
+        isRoot: !parentFolder ? true : false,
+        tags,
+        reminders,
       });
 
-      return {
-        id: fileDoc._id,
-        filename: fileDoc.filename,
-        url: res.key,
-      };
+      return fileDoc;
     })
   );
 

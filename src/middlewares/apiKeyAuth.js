@@ -8,7 +8,6 @@ const apiKeyAuth = async (req, res, next) => {
 
   const user = await User.findById(req.user._id).select("accessKey");
 
-  console.log(user);
   if (!user)
     return res.status(403).json({ status: "fail", message: "Invalid API key" });
 
