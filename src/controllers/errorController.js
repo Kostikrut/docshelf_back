@@ -1,4 +1,4 @@
-import AppError from "../utils/appError";
+import AppError from "../utils/appError.js";
 
 const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}`;
@@ -62,5 +62,5 @@ export default (err, req, res, next) => {
     sendErrorProd(error, res);
   }
 
-  next();
+  // next();
 };

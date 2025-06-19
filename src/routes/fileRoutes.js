@@ -1,10 +1,20 @@
 import express from "express";
-
-import { protect, verifyStoredToken } from "../controllers/authController.js";
-import { createFolder } from "../controllers/folderController.js";
+import {
+  uploadFiles,
+  downloadFile,
+  deleteFileController,
+} from "../controllers/fileController.js";
+import { protect } from "../controllers/authController.js";
+// import apiKeyAuth from "../middlewares/apiKeyAuth.js";
+import multer from "multer";
 
 const router = express.Router();
+const upload = multer();
 
-// router.post("/createfolder", protect, createFolder);
+router.use(protect);
+
+router.post("/", upload.array("files", 5), uploadFiles);
+router.get("/:filename", downloadFile);
+router.delete("/:filename", deleteFileController);
 
 export default router;

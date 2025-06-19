@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema({
     filename: String,
     url: String,
   },
+  accessKey: {
+    type: String,
+    // required: true,
+    unique: true,
+  },
   password: {
     type: String,
     required: [true, "Please provide a password"],
@@ -51,6 +56,15 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+});
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("accessKey")) {
+    const rawKey = crypto.randomBytes(32).toString("hex");
+    this.accessKey = await bcrypt.hash(rawKey, 12);
+    this.rawAccessKey = rawKey; // user gets this raw key once
+  }
+  next();
 });
 
 userSchema.pre("save", async function (next) {

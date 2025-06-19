@@ -1,6 +1,5 @@
 import express from "express";
 
-import { uploadImageToS3Bucket } from "../middlewares/s3ImageUpload.js";
 import {
   signup,
   login,
@@ -15,7 +14,6 @@ import {
   getMe,
   getUser,
   updateMe,
-  updateUser,
   deleteMe,
 } from "../controllers/userController.js";
 
@@ -30,10 +28,8 @@ router.use(protect);
 
 router.get("/verifyStoredToken", verifyStoredToken);
 router.get("/me", getMe, getUser);
-router.patch("/updateMe", uploadImageToS3Bucket, updateMe);
+router.patch("/updateMe", updateMe);
 router.patch("/updateMyPassword", updatePassword);
 router.delete("/deleteMe", deleteMe);
-
-router.route("/:id").get(getUser).patch(uploadImageToS3Bucket, updateUser);
 
 export default router;

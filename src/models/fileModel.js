@@ -72,6 +72,6 @@ const folderSchema = new mongoose.Schema({
   },
 });
 
-const File = mongoose.model("File", folderSchema);
+const File = mongoose.models.File || mongoose.model("File", folderSchema);
 
 export default File;

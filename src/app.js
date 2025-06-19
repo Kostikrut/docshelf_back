@@ -5,6 +5,7 @@ import userRouter from "./routes/userRoutes.js";
 import folderRouter from "./routes/folderRoutes.js";
 import fileRouter from "./routes/fileRoutes.js";
 import AppError from "./utils/appError.js";
+import globalErrorHandler from "./controllers/errorController.js";
 
 import cors from "cors";
 
@@ -18,19 +19,16 @@ if (process.env.NODE_ENV === "development") {
 
 app.use(express.json());
 
-app.use("/api/v1/check", (req, res) => {
-  res.status(200).json({
-    status: "success",
-    message: "Welcome to the API",
-  });
-});
-
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/folders", folderRouter);
 app.use("/api/v1/files", fileRouter);
 
-app.all("/", (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-});
+// app.all("*", (req, res, next) => {
+//   console.log(req);
+
+//   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+// });
+
+app.use(globalErrorHandler);
 
 export default app;
