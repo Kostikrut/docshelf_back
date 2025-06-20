@@ -6,6 +6,7 @@ import User from "../models/userModel.js";
 import catchAsync from "./../utils/catchAsync.js";
 import AppError from "./../utils/appError.js";
 import { sendResetPasswordUrl } from "./../utils/email.js";
+import { unwrapFileKey } from "../utils/encryption.js";
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -13,28 +14,26 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, res, fileKey = null) => {
   const token = signToken(user._id);
-  const expiresIn =
-    Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000;
 
-  const cookieOptions = {
-    expires: new Date(expiresIn),
-    httpOnly: true,
+  const userData = {
+    id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
   };
 
-  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
-  res.cookie("jwt", token, cookieOptions);
-
-  user.password = undefined;
+  if (fileKey) {
+    userData.fileEncryptionKey = fileKey;
+  }
 
   res.status(statusCode).json({
     status: "success",
     token,
     data: {
-      user,
+      user: userData,
     },
-    expiresIn,
   });
 };
 
@@ -43,13 +42,8 @@ export const signup = catchAsync(async (req, res, next) => {
     req.body;
 
   const user = await User.findOne({ email });
-
-  if (user) {
-    return res.status(400).json({
-      status: "fail",
-      message: "User with specified email already exists",
-    });
-  }
+  if (user)
+    return next(new AppError("User with that Email already exists", 400));
 
   const newUser = await User.create({
     fullName,
@@ -60,7 +54,20 @@ export const signup = catchAsync(async (req, res, next) => {
     passwordConfirm,
   });
 
-  createSendToken(newUser, 201, res);
+  const newUserWithKeys = await User.findById(newUser._id).select(
+    "+fileEncryptionKeyWrapped +fileEncryptionKeySalt +fileEncryptionKeyIV"
+  );
+
+  const fileKey = unwrapFileKey(
+    password,
+    newUserWithKeys.fileEncryptionKeyWrapped,
+    newUserWithKeys.fileEncryptionKeySalt,
+    newUserWithKeys.fileEncryptionKeyIV
+  );
+
+  const fileEncryptionKey = fileKey.toString("base64");
+
+  createSendToken(newUser, 200, res, fileEncryptionKey);
 });
 
 export const login = catchAsync(async (req, res, next) => {
@@ -69,12 +76,22 @@ export const login = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new AppError("Please provide an email and password", 400));
 
-  const user = await User.findOne({ email }).select("+password");
-
+  const user = await User.findOne({ email }).select(
+    "+password +fileEncryptionKeyWrapped +fileEncryptionKeySalt +fileEncryptionKeyIV"
+  );
   if (!user || !(await user.correctPassword(password, user.password)))
-    return next(new AppError("Incorrect email or password ", 401));
+    return next(new AppError("Incorrect email or password", 401));
 
-  createSendToken(user, 200, res);
+  const fileKey = unwrapFileKey(
+    password,
+    user.fileEncryptionKeyWrapped,
+    user.fileEncryptionKeySalt,
+    user.fileEncryptionKeyIV
+  );
+
+  const fileEncryptionKey = fileKey.toString("base64");
+
+  createSendToken(user, 200, res, fileEncryptionKey);
 });
 
 export const protect = catchAsync(async function (req, res, next) {

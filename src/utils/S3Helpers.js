@@ -14,9 +14,10 @@ export function generateFileName(bytes = 32) {
   return crypto.randomBytes(bytes).toString("hex");
 }
 
-export async function uploadFile(file, userId) {
-  const fileName = generateFileName();
-  const key = `clients/${userId}/${fileName}-${file.originalname}`;
+export async function uploadFileToS3(file, userId, parentFolderId = "") {
+  const key = `clients/${userId}/${
+    parentFolderId ? parentFolderId.toString() + "-" : ""
+  }${file.originalname}`;
 
   const command = new PutObjectCommand({
     Bucket: bucketName,
@@ -40,7 +41,7 @@ export async function getFileUrl(key) {
   return url;
 }
 
-export async function deleteFile(key) {
+export async function deleteFileFromS3(key) {
   const command = new DeleteObjectCommand({
     Bucket: bucketName,
     Key: key,
