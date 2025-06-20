@@ -67,3 +67,18 @@ export const deleteFileController = catchAsync(async (req, res, next) => {
     .status(204)
     .json({ status: "success", message: "File deleted successfully" });
 });
+
+export const getFileDetails = catchAsync(async (req, res, next) => {
+  const { id: fileId } = req.params;
+  const userId = req.user._id;
+
+  const file = await File.findOne({
+    _id: fileId,
+    user: userId,
+  });
+
+  if (!file) {
+    return next(new AppError("File not found", 404));
+  }
+  res.status(200).json({ status: "success", data: { file } });
+});
