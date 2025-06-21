@@ -15,14 +15,14 @@ import {
 const router = express.Router();
 router.use(protect);
 
-router.route("/").post(createReminder).get(getReminder);
-
+router.post("/", createReminder);
 router.get("/all", getAllReminders);
 router.get("/upcoming", getUpcomingReminders);
 router.get("/past", getPastReminders);
 
 router
   .route("/:id")
+  .get(getReminder)
   .patch(updateReminder)
   .delete(deleteReminder)
   .put(toggleReminderStatus);
